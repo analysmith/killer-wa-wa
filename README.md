@@ -21,4 +21,4 @@ No code contributions are being accepted at this time; however, please feel free
 ### Who do I talk to? ###
 
 * Ana Smith (gtskippy@gatech.edu)
-* Cleverbot[http://www.cleverbot.com/] (I'd take anything it says with a grain of salt though)
+* [Cleverbot](http://www.cleverbot.com/) (I'd take anything it says with a grain of salt though)
