@@ -1,10 +1,34 @@
 __author__ = 'blackfish'
 
 import random
+import itertools
 
 START_FAT = 0.75
 FISH_COUNT = 100
 FISH_ENERGY = 0.01
+
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    return type('Enum', (), enums)
+
+CellType = enum("beach", "sea", "icefloe")
+
+class Community():
+	def __init__(self, env, size=10):
+		self.env = env
+		self.size = size
+		center_pos = (env.y/2, env.x / 2)
+		radius = 10
+		spaces = itertools.product(range(0, radius), range(0,radius))
+		free_spaces = filter(lambda x: self.free_space(x), spaces)
+		chosen_spaces = random.sample(free_spaces, size)
+		for space in chosen_spaces:
+			bob = Orca(env, self, space[1], space[0])
+			env.add_animal(bob)
+	
+	def free_space(self, pos):
+		cell = self.env.grid[pos[0]][pos[1]]
+		return cell.resident == None and cell.type != CellType.beach and cell.teyp != CellType.icefloe
 
 class Orca():
 
@@ -24,7 +48,7 @@ class Orca():
         :return:
         '''
 
-        #sensory_matrix = self.detect()
+        # sensory_matrix = self.detect()
         # random and stupid at this point, just can't fall off edge of earth
         newlocx = random.randint(0, 2) + self.locx
         newlocy = random.randint(0, 2) + self.locy
@@ -39,7 +63,8 @@ class Orca():
 
         :return:
         '''
-        pass
+		
+        return 
 
     def attack(self, x, y):
         '''
