@@ -127,26 +127,18 @@ class Orca(Animal):
         :param y: y position of cell under attack
         :return:
         '''
-        '''
-        target = self.env.cell[y][x].resident
-        if random.randint(0, 10) == 0 and target :
-            self.fat += max(target.fat_loss, 1)
-            target.fat -= target.fat_loss
-        '''
+        
         prey_animals = [a for a in self.env.animals if a.type != AgentType.orca]
         prey, prey_dist = self.get_nearest(prey_animals)
         if prey and prey_dist < 3:
-            
-            #attack_success = random.randint(0, prey_dist + 1)
-            attack_success = self.brain.get_planned_action_success(prey)
-            if not attack_success:
+            attack_success, action_index = self.brain.get_planned_action_success(prey)
+            if attack_success:
                 prey.fat -= 1
                 if prey.fat == 0:
                     self.env.animals.remove(prey)
-                    #import pdb;pdb.set_trace()
                     self.env.animal_grid[prey.locy, prey.locx] = 0
             
-            # train classifier
+            
         
     
     def detect_env(self):

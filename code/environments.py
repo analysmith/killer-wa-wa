@@ -63,8 +63,9 @@ class Environment():
     
     def update(self):
         for a in self.animals:
-            a.swim()
-        for a in filter(lambda m: m.type == AgentType.orca, self.animals):
+            a.swim
+        orcas = [a for a in filter(lambda m: m.type == AgentType.orca, self.animals)]
+        for a in orcas:
             a.attack()
             
     def cell_empty(self, locy, locx):
