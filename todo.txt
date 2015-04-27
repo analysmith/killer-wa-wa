@@ -1,0 +1,13 @@
+TODO
+
+- Environmental factors (e.g., icebergs, smells, beaches) should be fully implemented at this point.
+- Agents should obey their restrictions imposed upon them upon the environment (e.g., whales lose the ability to walk on land :()
+- Agents should be "aware" of their environment and learning from it. When I say "aware", I mean they should be observing environmental variables and transforming them into features. 
+- The whales agents should be able to communicate with one another.
+
+Fixed propagation method. Using shifting to cause diffusion.
+Switching to all matrices. Will use hadamard product to compute smell values. This should make it easier to calculate values of squares for orcas.
+Need to figure out communication aspect. Orcas may not be able to communicate complex actions. Maybe just use sound to increase orca happiness.
+Step 1: Animals must move according to prefs.
+Step 2: Orcas must be able to hunt.
+Step 3: Decrease animals' health over time unless they eat.

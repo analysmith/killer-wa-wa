@@ -2,58 +2,75 @@ __author__ = 'blackfish'
 
 import random
 import numpy as np
-BEACH_Y = 5
+from utils import *
+BEACH_Y = 10
 BEACH_PROB = 0.001
 FLOE_PROB = 0.005
 
-def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    return type('Enum', (), enums)
-
-CellType = enum("beach", "sea", "icefloe")
-
 class Environment():
 
-    def __init__(self, x=1000, y=1000, num_floes=10, num_beach=100):
+    def __init__(self, y=1000, x=1000, floe_prob=FLOE_PROB):
+        if y < 10 or x < 10:
+            assert False, "C'mon. The environment should be a wee bit larger than "+\
+                str(y) +" by "+ str(x) +". This isn't SeaWorld."
         self.grid = []
         self.x = x
         self.y = y
-        self.num_floes = num_floes
-        self.num_beach = num_beach
+        self.num_floes = int(x * FLOE_PROB)
+        self.num_beach = int(x * BEACH_PROB)
+        self.animals = []
+        self.ground_grid = np.zeros(shape=(self.y, self.x))
+        self.animal_grid = np.zeros(shape=(self.y, self.x))
+        self.seal_grid = np.zeros(shape=(self.y, self.x))
+        self.fish_grid = np.zeros(shape=(self.y, self.x))
+        self.sound_grid = np.zeros(shape=(self.y, self.x))
         self.generate_grid()
 
+    def add_animal(self, animal):
+        x = animal.locx
+        y = animal.locy
+        #cell = self.grid[y][x]
+        #cell.resident = animal
+        self.animals.append(animal)
+        self.animal_grid[y, x] = 1 # should change to animal type
+       
     def generate_grid(self):
         self.grid = np.array([[EnvCell()] * self.x] * self.y)
+        
         # create beach with some parts jutting out further than others
-        for i in range(0, BEACH_Y):
-            for j in range(0, self.x):
-                if i < BEACH_Y - 2:
-                    self.grid[i][j] = EnvCell(type=CellType.beach)
-                elif i == BEACH_Y-1 and random.randint(0, 10) == 0:
-                    self.grid[i][j] = EnvCell(type=CellType.beach)
-                else:
-                    self.grid[i][j] = EnvCell()
-
-        # create ice floes with small prob
-        for i in range(BEACH_Y, self.y-3):
-            for j in range(0, self.x):
-                probe = random.randint(0, 20) == 0
-                if probe:
-                    self.grid[i][j] = EnvCell(type=CellType.icefloe)
-                else:
-                    self.grid[i][j] = EnvCell()
-
-	def add_animal(animal):
-		x = animal.locx
-		y = animal.locy
-		cell = self.grid[y][x]
-		cell.resident = animal
-		
-    def propagate(self):
-        pass
-
-    def show_up(self):
-        pass
+        self.ground_grid[:BEACH_Y-2, :] = 1
+        x_indices = random.sample(range(0, self.x), 10)
+        self.ground_grid[BEACH_Y-1][x_indices] = 1
+        
+        # Ice floes will be indicated by fractional value (represents lack of safety for seals)
+        # Add ice floes
+        for i in range(BEACH_Y, self.y):
+            x_indices = random.sample(range(0, self.x), 3)
+            self.ground_grid[i, x_indices] = 0.75
+        
+    def propagate(self, grid, prop_frac=0.5, min_threshold=0.01):
+        up = np.roll(grid, 1, axis=0) * prop_frac
+        up[0][:] = 0
+        down = np.roll(grid, -1, axis=0) * prop_frac
+        down[grid.shape[0]-1][:] = 0
+        right = np.roll(grid, 1, axis=1) * prop_frac
+        right[0][:] = 0
+        left = np.roll(grid, -1, axis=1) * prop_frac
+        left[grid.shape[1]-1][:] = 0
+        prop_mat = grid + up + down + right + left
+        prop_mat = prop_mat * np.greater(prop_mat, min_threshold)
+        return prop_mat
+    
+    def update(self):
+        for a in self.animals:
+            a.swim()
+        for a in filter(lambda m: m.type == AgentType.orca, self.animals):
+            a.attack()
+            
+    def cell_empty(self, locy, locx):
+        if locy < 0 or locy >= self.y or locx < 0 or locx >= self.x:
+            return False
+        return self.animal_grid[locy, locx] == 0 and self.ground_grid[locy, locx] == 0
 
 class EnvCell():
     def __init__ (self, type=CellType.sea, resident=None, pos=(0,0)):
@@ -69,4 +86,4 @@ class EnvCell():
         self.resident = resident
         self.pos = pos
         # right now, only 3 types of smells: orca, seals, and fish
-        self.smells = np.array([0.0] * 3)
+        self.smells = np.array([0.0] * 3) # TODO: fig out enum len #len(AgentType))
