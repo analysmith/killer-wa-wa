@@ -134,10 +134,11 @@ class Orca(Animal):
             attack_success, action_index = self.brain.get_planned_action_success(prey)
             if attack_success:
                 prey.fat -= 1
+                '''
                 if prey.fat == 0:
                     self.env.animals.remove(prey)
                     self.env.animal_grid[prey.locy, prey.locx] = 0
-            
+                '''
             
         
     
@@ -235,13 +236,8 @@ class Orca(Animal):
 
 class Seal(Animal):
 
-    def __init__(self, env, y, x):
-        self.fat = START_FAT
-        self.brain = None # some classifier
-        self.locx = x
-        self.locy = y
-        self.fat_loss = 1.0
-        self.env = env
+    def __init__(self, env, community, y, x):
+        super(Seal, self).__init__(env, community, y, x)
         self.type = AgentType.seal
 
     def swim(self):

@@ -54,7 +54,7 @@ def generatePlot(env):
         animalsy = [x.locy for x in env.animals]
         scatter = plt.scatter(animalsx, animalsy, c=animal_color, animated=True)
         return scatter,
-    ani = animation.FuncAnimation(fig, update_animals, 100, interval=100, blit=True)    
+    ani = animation.FuncAnimation(fig, update_animals, 100, interval=50, blit=True)    
     plt.ylim = (0, env.y)
     plt.xlim = (0, env.x)
     plt.show()

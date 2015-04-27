@@ -45,7 +45,7 @@ class Environment():
         # Ice floes will be indicated by fractional value (represents lack of safety for seals)
         # Add ice floes
         for i in range(BEACH_Y, self.y):
-            x_indices = random.sample(range(0, self.x), 3)
+            x_indices = random.sample(range(0, self.x), 1)
             self.ground_grid[i, x_indices] = 0.75
         
     def propagate(self, grid, prop_frac=0.5, min_threshold=0.01):
