@@ -29,11 +29,11 @@ No code contributions are being accepted at this time; however, please feel free
 
 Some parameters can be adjusted through command line arguments.
 
--o, --orcas [input: Number of orcas][def:10]
--p, --prey [input: Number of prey][def:5]
--d, --dim [input: Single int representing length of side of square world][def:100]
--i, --num_iter [input: Number of time steps][def:200]
--m, --mammal [indicator: use mammal prey][def:False]
+* -o, --orcas [input: Number of orcas][def:10]
+* -p, --prey [input: Number of prey][def:5]
+* -d, --dim [input: Single int representing length of side of square world][def:100]
+* -i, --num_iter [input: Number of time steps][def:200]
+* -m, --mammal [indicator: use mammal prey][def:False]
 
 ### Who do I talk to? ###
 
