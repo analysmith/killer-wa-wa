@@ -9,7 +9,7 @@ FLOE_PROB = 0.005
 
 class Environment():
 
-    def __init__(self, y=1000, x=1000, floe_prob=FLOE_PROB):
+    def __init__(self, y=1000, x=1000, floe_prob=FLOE_PROB, num_iter=200):
         if y < 10 or x < 10:
             assert False, "C'mon. The environment should be a wee bit larger than "+\
                 str(y) +" by "+ str(x) +". This isn't SeaWorld."
@@ -25,6 +25,8 @@ class Environment():
         self.fish_grid = np.zeros(shape=(self.y, self.x))
         self.sound_grid = np.zeros(shape=(self.y, self.x))
         self.generate_grid()
+        self.num_iter = num_iter
+        self.curr_iter = 0
 
     def add_animal(self, animal):
         x = animal.locx
@@ -67,10 +69,21 @@ class Environment():
         orcas = [a for a in filter(lambda m: m.type == AgentType.orca, self.animals)]
         for a in orcas:
             a.attack()
+        self.curr_iter += 1
+        print "current iteration:", self.curr_iter, "/",self.num_iter
+        if self.curr_iter > self.num_iter:
+            return False
+        return True
             
-    def cell_empty(self, locy, locx):
+    def cell_empty(self, locy, locx, land_ok=False):
         if locy < 0 or locy >= self.y or locx < 0 or locx >= self.x:
             return False
+        
+        #wait for this. don't want to introduce too many vars.
+        '''
+        if land_ok:
+            return self.animal_grid[locy, locx] == 0
+        '''
         return self.animal_grid[locy, locx] == 0 and self.ground_grid[locy, locx] == 0
 
 class EnvCell():

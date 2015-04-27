@@ -248,7 +248,7 @@ class Seal(Animal):
             self.drift(closest_orca, False)
         else: # note we may choose optimal randomly. we may also choose unavailable spot also.
             xoffset, yoffset = random.randint(-1,1), random.randint(-1,1)
-            if self.env.cell_empty(self.locy + yoffset, self.locx + xoffset):
+            if self.env.cell_empty(self.locy + yoffset, self.locx + xoffset, land_ok=True):
                 nx = self.locx + xoffset
                 ny = self.locy + yoffset
                 if nx >= 0 and nx < self.env.x:

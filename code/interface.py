@@ -43,21 +43,36 @@ def generatePlot(env):
     fig = plt.figure()
     for i in range(0, env.y):
         colors = [get_color(x) for x in env.ground_grid[i]]
-        plt.scatter(range(0, env.x), [i] * env.x, c=colors,s=[5]*env.x, alpha=0.5)
+        plt.scatter(range(0, env.x), [i] * env.x, c=colors,s=[10]*env.x, alpha=0.5)
         
     scatter = plt.scatter([], [], animated=True) #, c=animal_color, s=[10]*env.x)
     def update_animals(num):
-        env.update()
+        cont_iter = env.update()
         for a in env.animals:
             a.swim()
         animalsx = [x.locx for x in env.animals]
         animalsy = [x.locy for x in env.animals]
         scatter = plt.scatter(animalsx, animalsy, c=animal_color, animated=True)
+        print("cont_iter", cont_iter)
+        if not cont_iter:
+            #Save orca action preferences to a file
+            with open("action prefs.txt", "w") as f:
+                vectors = []
+                f.write("noise_pref,noise_boosted1,noise_boosted2,noise_averse\n")
+                for a in filter(lambda b:b.type == AgentType.orca, env.animals):
+                    if len(a.brain.evaluation_vector) > 0: # some whales never learn anything
+                        vectors.append(a.brain.evaluation_vector)
+                    f.write(",".join([str(c) for c in a.brain.evaluation_vector]) + "\n")
+                f.write("Mean:"+",".join([str(c) for c in np.mean(vectors,axis=0)]) + "\n")
+            plt.close()
         return scatter,
     ani = animation.FuncAnimation(fig, update_animals, 100, interval=50, blit=True)    
     plt.ylim = (0, env.y)
     plt.xlim = (0, env.x)
-    plt.show()
+    try:
+        plt.show()
+    except:     
+        print "Good bye"
     
 if __name__=="__main__":
     e = Environment(x=100, y=100)
