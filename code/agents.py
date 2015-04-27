@@ -134,11 +134,11 @@ class Orca(Animal):
             attack_success, action_index = self.brain.get_planned_action_success(prey)
             if attack_success:
                 prey.fat -= 1
-                '''
+                
                 if prey.fat == 0:
                     self.env.animals.remove(prey)
                     self.env.animal_grid[prey.locy, prey.locx] = 0
-                '''
+                
             
         
     

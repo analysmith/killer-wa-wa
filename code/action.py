@@ -2,11 +2,15 @@ import numpy as np
 import random
 from utils import *
 from sklearn.gaussian_process import GaussianProcess as GP
+from scipy import stats
 
-# prob of success. index corresponds to action. index 0 = sound
-attack_success_no_sound = [(1, 0.5), (1, 1), (1, 2), (2, 1)]
-attack_success_sound =  [(.5, 0.5), (.5, 1), (0, 2), (3, 1)] # 
-attack_success_soundnfish = [(1, 0.5), (1.5, 1), (1.25, 2), (.5, 1)]
+# attack_success = [(sound_mean, sound_var), ..., (act_i_mean, act_i_var),...]
+# notice the act of making a sound doesn't immediately produce any success
+attack_success_no_sound = [(1, 0.5), (2, 1), (1, 2), (2, 2)] # action success array after not any sound
+attack_success_sound =  [(0, 0.5), (0, 1), (0, 2), (2, 2)] # action success array after making sound around evesdropping mammals
+attack_success_soundnfish = [(1, 0.5), (2, 1), (1.25, 2), (1, 2)] # action success array after making sound around fish
+PHI = stats.distributions.norm().cdf
+SUCCESS_THRESHOLD = 3
 
 class ActionPlanner():
     def __init__(self):
@@ -15,25 +19,26 @@ class ActionPlanner():
         self.training_model = None
         self.action_x_train = []
         self.action_y_train = []
+        self.batch_index = 0
+        self.num_evaluations = 0
+        self.evaluation_vector = []
         
-        self.event_count = 0
         
     
     def get_random_action_success(self):
         action_index = random.randint(0, len(attack_success_no_sound)-1)
         success_mean, success_var = attack_success_no_sound[action_index]
-        success = np.random.normal(success_mean, success_var) >= 2
+        success = -1
+        if np.random.normal(success_mean, success_var) >= SUCCESS_THRESHOLD:
+            success = 1
         return success, action_index
     
     def get_planned_action_success(self, prey):
-        success = False
+        success = -1
         action_index = 0
         # If we don't have any past data, just try random stuff
-        if len(self.action_x_train) < 10:
-            print("Thinking")
+        if len(self.action_x_train) < 10: 
             success, action_index = self.get_random_action_success()
-            self.event_count = (self.event_count + 1) % 50
-            
             self.action_x_train.append((self.prev_action_index, action_index))
             self.action_y_train.append(success)
             self.prev_action_index = action_index
@@ -48,30 +53,27 @@ class ActionPlanner():
             self.trained_model = self.gp.fit(training_x, \
                 self.action_y_train)
             
-            opinions = []
+            prob_opinions = []
             for i in range(0, len(attack_success_no_sound)):
-                #o = self.trained_model.score(np.array((len(prevs) + 1, self.prev_action_index, i)),np.array([True]))
-                #import pdb;pdb.set_trace()
-                o, err = self.trained_model.predict(np.array((len(prevs) + 1, self.prev_action_index, i)), eval_MSE=True)
-                opinions.append((o,err[0]))
+                o, err = self.trained_model.predict((len(prevs), self.prev_action_index, i), eval_MSE=True)
+                #print(o)
+                est_prob = PHI(-max(o,np.array([0.1]))/np.sqrt(err[0])+0.1)
+                prob_opinions.append(est_prob)
                
-            # choose min error successful action 
-            opinion_vec = []
-            for o, err in opinions:
-                if not o:
-                    opinion_vec.append(.1)
-                else:
-                    opinion_vec.append(1/err+.1)
-            total = sum(opinion_vec)
-            opinions = [a/float(total) for a in opinion_vec]
-            #opinions = np.array(opinion_vec)/np.sum(opinion_vec)
-            print "OPS:",opinions
-            
-            
+            # choose action based on expected success 
+            prob_total = sum(prob_opinions)
+            if prob_total == 0:
+                print "Caught ya"
+                amt = 1./len(prob_opinions)
+                for j in range(0, len(prob_opinions)):
+                    prob_opinions[j] = amt
+            else:
+                prob_opinions = [a/float(prob_total) for a in prob_opinions]
+                prob_opinions = [a[0] for a in prob_opinions]
+            print "PROBS",prob_opinions
             # Randomly select option (better options have higher probabilites)
-            #if opinions.shape[0] != 1:
-            action_index = np.nonzero(np.random.multinomial(1, np.array(opinions)))[0]
-            print action_index
+            action_index = np.nonzero(np.random.multinomial(1, prob_opinions))[0]
+            print "ACTION:",action_index
             # Execute action
             
             success_mean, success_var = None, None
@@ -81,8 +83,11 @@ class ActionPlanner():
                 if prey.type == AgentType.fish:
                     success_mean, success_var = attack_success_soundnfish[action_index]
                 else:
+                    print "yeah"
                     success_mean, success_var = attack_success_sound[action_index]
-            success = np.random.normal(success_mean, success_var) >= 2
+            if np.random.normal(success_mean, success_var) >= SUCCESS_THRESHOLD:
+                success = 1
+            
             # Forget the oldest past incident and commit the new one to memory
             if len(self.action_x_train) > 25:
                 self.action_x_train.remove(self.action_x_train[0])
@@ -91,6 +96,7 @@ class ActionPlanner():
             self.action_x_train.append((self.prev_action_index, action_index))
             self.action_y_train.append(success)
             self.prev_action_index = action_index
+            
             #with open("debug.txt", "a") as f:
             #    f.write(str(zip(self.action_x_train, self.action_y_train)) + "\n")
             
@@ -102,7 +108,7 @@ class ActionPlanner():
             print(time_index)
             o = self.trained_model.score(np.array((time_index-1, self.prev_action_index, i)),\
                np.array([True])) + 0.01
-            #print "This is an opinion:", o
+            
             opinions.append(o)
         '''
         
