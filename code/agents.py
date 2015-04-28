@@ -57,6 +57,7 @@ class Animal(object):
         self.locy = y
         self.type = None
         self.manhattan_dist = lambda sucker: np.abs(sucker.locy - self.locy) + np.abs(sucker.locx-self.locx)
+        self.experience = 0
     
     def swim(self):
         '''
@@ -127,7 +128,7 @@ class Orca(Animal):
         :param y: y position of cell under attack
         :return:
         '''
-        
+        self.experience += 1
         prey_animals = [a for a in self.env.animals if a.type != AgentType.orca]
         prey, prey_dist = self.get_nearest(prey_animals)
         if prey and prey_dist < 3:
@@ -228,8 +229,7 @@ class Orca(Animal):
                     self.locx = nx
                 if ny >= 0 and ny < self.env.y:
                     self.locy = ny   
-        self.env.animal_grid[self.locy, self.locx] = 1  # update animal grid    
-        #self.attack()
+        self.env.animal_grid[self.locy, self.locx] = 1
     
     def get_happy(self):
         return sum([o.fat for o in self.community.orcas]) + self.fat/2.0

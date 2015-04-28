@@ -52,13 +52,14 @@ def generatePlot(env):
             a.swim()
         animalsx = [x.locx for x in env.animals]
         animalsy = [x.locy for x in env.animals]
-        scatter = plt.scatter(animalsx, animalsy, c=animal_color, animated=True)
+        sizes = [x.fat/2 for x in env.animals] 
+        scatter = plt.scatter(animalsx, animalsy, c=animal_color, s=sizes,animated=True)
         if not cont_iter:
             #Save orca action preferences to a file
             with open("action prefs.txt", "w") as f:
                 vectors = []
-                f.write("noise_pref,noise_boosted1,noise_boosted2,noise_averse\n")
-                for a in filter(lambda b:b.type == AgentType.orca, env.animals):
+                f.write("noise_pref,noise_boosted1,noise_boosted2,noise_averse,experience\n")
+                for a in sorted(filter(lambda b:b.type == AgentType.orca, env.animals),key=lambda b:b.experience):
                     if a.brain.evaluation_vector != None and a.brain.evaluation_vector.shape[0] > 0: # some whales never learn anything
                         vectors.append(a.brain.evaluation_vector)
                         f.write(",".join([str(c) for c in a.brain.evaluation_vector]) + "\n")

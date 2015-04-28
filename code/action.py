@@ -7,9 +7,9 @@ from scipy import stats
 
 # attack_success = [(sound_mean, sound_var), ..., (act_i_mean, act_i_var),...]
 # notice the act of making a sound doesn't immediately produce any success
-attack_success_no_sound = [-1, .25, .25, .25] # action success array after not any sound
-attack_success_sound =  [-1, .05, .05, .05] # action success array after making sound around evesdropping mammals
-attack_success_soundnfish = [-1, .3, .4, .25] # action success array after making sound around fish
+attack_success_no_sound = [.00000001, .25, .25, .25] # action success array after not any sound
+attack_success_sound =  [.00000001, .05, .05, .05] # action success array after making sound around evesdropping mammals
+attack_success_soundnfish = [.00000001, .8, .8, .05] # action success array after making sound around fish
 PHI = stats.distributions.norm().cdf
 
 class ActionPlanner():
@@ -48,30 +48,11 @@ class ActionPlanner():
             # Consider past actions...
             prevs = [a[0] for a in self.action_x_train]
             acts = [a[1] for a in self.action_x_train]
-            action_training = zip(range(0, len(prevs)), prevs, acts)
+            action_training = zip(prevs, acts) #range(0, len(prevs)), 
             training_x = np.array(action_training)
             
-            self.trained_model = self.gnb.fit(training_x, self.action_y_train)
-            prob_opinions = []
-            for i in range(0, len(attack_success_no_sound)):
-                tag_probs = self.trained_model.predict_proba(np.array((len(prevs), self.prev_action_index, i)))
-                print tag_probs
-                print tag_probs.shape
-                pos_tag_prob = None
-                if tag_probs.shape[1]==1L:
-                    if self.action_y_train[0] == -1:
-                        #tag_probs = np.reshape(np.array((tag_probs[0,0], 1L-tag_probs[0,0])), (1L, 1L))
-                        pos_tag_prob = 0
-                    else:
-                        #tag_probs = np.reshape(np.array((1L-tag_probs[0,0], tag_probs[0,0])), (1L, 1L))
-                        pos_tag_prob
-                else:
-                    pos_tag_prob = tag_probs[0][1]
-                
-                prob_opinions.append(pos_tag_prob)
-            total = sum(prob_opinions)
-            amt = 1./len(prob_opinions)
-            prob_opinions = [(a + amt)/(float(total)+1) for a in prob_opinions]
+            self.trained_model = self.gnb.fit(np.array(self.action_x_train), self.action_y_train)
+            prob_opinions = self.plan()
             if self.evaluation_vector == None:
                 self.evaluation_vector = np.array(prob_opinions)
             else:
@@ -102,6 +83,31 @@ class ActionPlanner():
             self.action_y_train.append(success)
             self.prev_action_index = action_index
         return success, action_index
+    
+    def plan(self):
+        prob_opinions = []
+        for i in range(0, len(attack_success_no_sound)):
+            pos_tag_prob = 0
+            for j in range(0, len(attack_success_no_sound)):
+                
+                tag_probs_future = self.trained_model.predict_proba(np.array((i, j)))#np.array((self.prev_action_index, i)))
+                tag_probs_now = self.trained_model.predict_proba(np.array((self.prev_action_index, i)))
+                tag_probs = (tag_probs_future + tag_probs_now)/2.
+                
+                if tag_probs.shape[1]==1L:
+                    if self.action_y_train[0] == -1:
+                        pos_tag_prob += 0
+                    else:
+                        pos_tag_prob += 1
+                else:
+                    pos_tag_prob += tag_probs[0][1]
+            pos_tag_prob = pos_tag_prob / j
+            prob_opinions.append(pos_tag_prob)
+        # prevent division by zero
+        total = sum(prob_opinions)
+        amt = .1/len(prob_opinions)
+        prob_opinions = [(a + amt)/(float(total)+.1) for a in prob_opinions]
+        return prob_opinions
     
     def get_action_beliefs(self, time_index):
         opinions = [] #self.gp.reduced_likelihood_function()[1]["gamma"].tolist()
