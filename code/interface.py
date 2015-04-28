@@ -53,17 +53,20 @@ def generatePlot(env):
         animalsx = [x.locx for x in env.animals]
         animalsy = [x.locy for x in env.animals]
         scatter = plt.scatter(animalsx, animalsy, c=animal_color, animated=True)
-        print("cont_iter", cont_iter)
         if not cont_iter:
             #Save orca action preferences to a file
             with open("action prefs.txt", "w") as f:
                 vectors = []
                 f.write("noise_pref,noise_boosted1,noise_boosted2,noise_averse\n")
                 for a in filter(lambda b:b.type == AgentType.orca, env.animals):
-                    if len(a.brain.evaluation_vector) > 0: # some whales never learn anything
+                    if a.brain.evaluation_vector != None and a.brain.evaluation_vector.shape[0] > 0: # some whales never learn anything
                         vectors.append(a.brain.evaluation_vector)
-                    f.write(",".join([str(c) for c in a.brain.evaluation_vector]) + "\n")
-                f.write("Mean:"+",".join([str(c) for c in np.mean(vectors,axis=0)]) + "\n")
+                        f.write(",".join([str(c) for c in a.brain.evaluation_vector]) + "\n")
+                    else:
+                        f.write("\n")
+                if len(vectors) > 0:
+                    f.write("Mean:"+",".join([str(c) for c in np.mean(np.array(vectors),axis=0)]) + "\n")
+                #f.write(str(vectors))
             plt.close()
         return scatter,
     ani = animation.FuncAnimation(fig, update_animals, 100, interval=50, blit=True)    
