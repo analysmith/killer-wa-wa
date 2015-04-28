@@ -12,11 +12,28 @@
 * You'll also need some (pretty common) Python libraries:
  - scikit-learn
  - numpy
- - more to come
+ - scipy
 
 ### Contribution guidelines ###
 
 No code contributions are being accepted at this time; however, please feel free to comment, nitpick, suggest, or otherwise positively verbally contribute.
+
+### Running the simulation ###
+
+1. Download directory.
+2. cd into killer-wa-wa/code/
+3. Enter 'python simulation.py' in your terminal.
+4. Sit back and watch orcas eat stuff.
+
+### Changing parameters ###
+
+Some parameters can be adjusted through command line arguments.
+
+* -o, --orcas [input: Number of orcas][def:10]
+* -p, --prey [input: Number of prey][def:5]
+* -d, --dim [input: Single int representing length of side of square world][def:100]
+* -i, --num_iter [input: Number of time steps][def:200]
+* -m, --mammal [indicator: use mammal prey][def:False]
 
 ### Who do I talk to? ###
 
