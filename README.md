@@ -10,9 +10,9 @@
 * Please read the project_3_x.pdf files. They help one understand the origins of the project. 
 * You'll need Python 2.6 at least to run the code.
 * You'll also need some (pretty common) Python libraries:
- - scikit-learn
- - numpy
- - scipy
+     - scikit-learn
+     - numpy
+     - scipy
 
 ### Contribution guidelines ###
 
