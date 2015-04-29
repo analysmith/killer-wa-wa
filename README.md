@@ -1,12 +1,10 @@
 # README #
 
 ### What is this repository for? ###
-
 * This repository holds code for simulating orca behavior and language!
 * v0.1 --> I plan on working on it later. This is only a beginning.... mwahahaha
 
 ### How do I get set up? ###
-
 * Please read the project_3_x.pdf files. They help one understand the origins of the project. 
 * You'll need Python 2.6 at least to run the code.
 * You'll also need some (pretty common) Python libraries:
@@ -16,11 +14,9 @@
 * If you have trouble running the code, you may want to consider installing [Anaconda](https://store.continuum.io/cshop/anaconda/). It contains a number of Python libraries that are useful for scientific computing, and it's FREE. Should you choose to run this application via Anaconda, you may opt to use the ipython command to run it. Example: ipython simulation.py -- -p 10 -o 5 -d 100 -i 200 -m
 
 ### Contribution guidelines ###
-
 No code contributions are being accepted at this time; however, please feel free to comment, nitpick, suggest, or otherwise positively verbally contribute.
 
 ### Running the simulation ###
-
 1. Download directory.
 2. cd into killer-wa-wa/code/
 3. Enter 'python simulation.py' in your terminal.
@@ -31,7 +27,6 @@ Successful orca attacks are indicated by a magenta orb surrounding an orca. You 
 Note: I recommend choosing grid size much larger than the number of animals you are adding to the simulation. There is currently an intermittent index out of bounds error when this is not the case. Still trying to track it down. If you run into this problem, just increase the *--dim* parameter until it goes away.
 
 ### Changing parameters ###
-
 Some parameters can be adjusted through command line arguments.
 
 * -o, --orcas [input: Number of orcas][def:10]
@@ -41,12 +36,10 @@ Some parameters can be adjusted through command line arguments.
 * -m, --mammal [indicator: use mammal prey][def:False]
 
 ### Who do I talk to? ###
-
 * Ana Smith (gitskippy@gmail.com)
 * [Cleverbot](http://www.cleverbot.com/) (I'd take anything it says with a grain of salt though)
 
 ### References ###
-
 1. Hunter, J. D. (2007). Matplotlib: A 2D graphics environment. Computing in science and engineering, 9(3), 90-95.
 
 2. Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., ... & Duchesnay, É. (2011). Scikit-learn: Machine learning in Python. The Journal of Machine Learning Research, 12, 2825-2830.
