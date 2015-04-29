@@ -67,11 +67,18 @@ class Environment():
         for a in self.animals:
             a.swim
         orcas = [a for a in filter(lambda m: m.type == AgentType.orca, self.animals)]
+        dead_orcas = []
         for a in orcas:
             a.attack()
+            if a.fat <=0:
+                dead_orcas.append(a)
+        for poor_willie in dead_orcas:
+            self.animals.remove(poor_willie)
+            poor_willie.community.pod.remove(poor_willie)
+            
         self.curr_iter += 1
         print "current iteration:", self.curr_iter, "/",self.num_iter
-        if self.curr_iter > self.num_iter:
+        if self.curr_iter >= self.num_iter:
             return False
         return True
             

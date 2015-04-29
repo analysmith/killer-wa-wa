@@ -18,30 +18,16 @@ class Community():
         self.size = size
         self.pod = []
         center_pos = (env.y/2, env.x/2)
-        pod_bounds = center_pos[0]-size, center_pos[0]+size, center_pos[1]-size, center_pos[1]+size 
+        pod_bounds = max(0,center_pos[0]-size), min(center_pos[0]+size, self.env.y-1), max(0,center_pos[1]-size), min(center_pos[1]+size, self.env.x-1)
+        
+        # Randomly select spaces within starting space.
         free_spaces = np.nonzero(self.empty_space_grid()[pod_bounds[0]:pod_bounds[1], pod_bounds[2]:pod_bounds[3]])
-        print(free_spaces)
         index_tuples = np.array(random.sample(zip(free_spaces[0], free_spaces[1]), size))
         openy, openx = np.split(index_tuples, 2, axis=1)
         for i in range(0, size):
             willie = Orca(env, self, openy[i]+center_pos[0], openx[i]+center_pos[1])
             self.pod.append(willie)
             self.env.add_animal(willie)
-            #self.env.orca_grid[openy, openx] = 1
-        '''
-        spaces = itertools.product(range(0, COMMUNITY_DIST), range(0,COMMUNITY_DIST))
-        free_spaces = filter(lambda x: self.free_space(x), spaces)
-        chosen_spaces = random.sample(free_spaces, size)
-        for space in chosen_spaces:
-            bob = Orca(env, self, space[1]+center_pos[1], space[0]+center_pos[0])
-            self.pod.append(bob)
-            env.add_animal(bob)
-        '''
-        
-        
-    def free_space(self, pos):
-        cell = self.env.grid[pos[0]][pos[1]]
-        return cell.resident == None and cell.type != CellType.beach and cell.type != CellType.icefloe
     
     def empty_space_grid(self):
         return np.equal(self.env.ground_grid, 0)
@@ -52,12 +38,14 @@ class Animal(object):
         self.env = env
         self.community = community
         self.fat = START_FAT
-        self.brain = None # some classifier here
+        self.brain = None # some classifier
         self.locx = x
         self.locy = y
         self.type = None
-        self.manhattan_dist = lambda sucker: np.abs(sucker.locy - self.locy) + np.abs(sucker.locx-self.locx)
+        self.manhattan_dist = lambda hotdog: np.abs(hotdog.locy - self.locy) + np.abs(hotdog.locx-self.locx)
         self.experience = 0
+        self.current_action = -1
+        self.success_count = 0
     
     def swim(self):
         '''
@@ -113,12 +101,14 @@ class Orca(Animal):
         self.type = AgentType.orca
         self.brain = ActionPlanner()
 
-    def communicate(self):
+    def broadcast(self):
         '''
-
+        Brief survey does not reveal whether oracs engage
+        in one-on-one communication with other whales. So
+        I assume that any whale within a certain range may
+        learn from another whale.
         :return:
         '''
-		
         return 
 
     def attack(self):
@@ -128,21 +118,24 @@ class Orca(Animal):
         :param y: y position of cell under attack
         :return:
         '''
-        self.experience += 1
+        
         prey_animals = [a for a in self.env.animals if a.type != AgentType.orca]
         prey, prey_dist = self.get_nearest(prey_animals)
         if prey and prey_dist < 3:
+            self.experience += 1
             attack_success, action_index = self.brain.get_planned_action_success(prey)
-            if attack_success:
+            self.current_action = self.brain.prev_action_index
+            if attack_success < 1:
+                self.success_count += 1
+                self.fat = min(self.fat + 2, START_FAT)
                 prey.fat -= 1
-                
                 if prey.fat == 0:
                     self.env.animals.remove(prey)
                     self.env.animal_grid[prey.locy, prey.locx] = 0
+            else:
+                print "Sadness"
+                self.fat -= 1
                 
-            
-        
-    
     def detect_env(self):
         '''
         Ignore this for now; it is built on the smell diffusion model.
@@ -213,12 +206,16 @@ class Orca(Animal):
         Moves the orca closer to prey, closer to other orcas, or just randomly.
         '''
         prey_list = [a for a in self.env.animals if a.type != AgentType.orca] # TODO: Add prey list
+        orca_list = [a for a in self.env.animals if a.type == AgentType.orca]
         self.env.animal_grid[self.locy, self.locx] = 0 # vacate old spot
         closest_sucker, min_prey_dist = self.get_nearest(prey_list)  
-        closest_orca, min_orca_dist = self.get_nearest(self.community.pod)        
-        if closest_sucker and min_prey_dist < 50 and random.randint(0, int(np.log(min_prey_dist + 2))) == 0: # arbitrary bound on detection range. necessary?
+        closest_orca, min_orca_dist = self.get_nearest(orca_list)
+        
+        # Orca will drift towards detected prey with probability inversely proportional to distance
+        gravity_indicator = random.randint(0, int(np.log(min_prey_dist + 2))) == 0 
+        if closest_sucker and min_prey_dist < ORCA_DETECT_RANGE*5 and gravity_indicator:
             self.drift(closest_sucker)
-        elif min_orca_dist > 10: # find other orcas if no fish nearby
+        elif min_orca_dist > ORCA_DETECT_RANGE: # find other orcas if no fish nearby
             self.drift(closest_orca)
         else: # note we may choose optimal randomly. we may also choose unavailable spot also.
             xoffset, yoffset = random.randint(-1,1), random.randint(-1,1)
@@ -230,6 +227,8 @@ class Orca(Animal):
                 if ny >= 0 and ny < self.env.y:
                     self.locy = ny   
         self.env.animal_grid[self.locy, self.locx] = 1
+        self.current_action = -1
+        #self.fat -= 1
     
     def get_happy(self):
         return sum([o.fat for o in self.community.orcas]) + self.fat/2.0
@@ -244,8 +243,8 @@ class Seal(Animal):
         orca_list = [a for a in self.env.animals if a.type == AgentType.orca] # TODO: Add prey list
         self.env.animal_grid[self.locy, self.locx] = 0 # vacate old spot  
         closest_orca, min_orca_dist = self.get_nearest(orca_list) 
-        if min_orca_dist < 5: # DANGER to fish
-            self.drift(closest_orca, False)
+        if min_orca_dist < ORCA_DETECT_RANGE/2 and random.randint(0,1)!=0: # DANGER to seals
+            self.drift(closest_orca, towards=False)
         else: # note we may choose optimal randomly. we may also choose unavailable spot also.
             xoffset, yoffset = random.randint(-1,1), random.randint(-1,1)
             if self.env.cell_empty(self.locy + yoffset, self.locx + xoffset, land_ok=True):
@@ -278,7 +277,7 @@ class FishSchool(Animal):
         orca_list = [a for a in self.env.animals if a.type == AgentType.orca] # TODO: Add prey list
         self.env.animal_grid[self.locy, self.locx] = 0 # vacate old spot  
         closest_orca, min_orca_dist = self.get_nearest(orca_list) 
-        if min_orca_dist < 5: # DANGER to fish
+        if min_orca_dist < ORCA_DETECT_RANGE/2 and random.randint(0,1)!=0: # DANGER to fish
             self.drift(closest_orca, False)
         else: # note we may choose optimal randomly. we may also choose unavailable spot also.
             xoffset, yoffset = random.randint(-1,1), random.randint(-1,1)

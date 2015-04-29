@@ -9,7 +9,7 @@ from scipy import stats
 # notice the act of making a sound doesn't immediately produce any success
 attack_success_no_sound = [.00000001, .25, .25, .25] # action success array after not any sound
 attack_success_sound =  [.00000001, .05, .05, .05] # action success array after making sound around evesdropping mammals
-attack_success_soundnfish = [.00000001, .8, .8, .05] # action success array after making sound around fish
+attack_success_soundnfish = [.00000001, .5, .8, .25] # action success array after making sound around fish
 PHI = stats.distributions.norm().cdf
 
 class ActionPlanner():
@@ -88,12 +88,10 @@ class ActionPlanner():
         prob_opinions = []
         for i in range(0, len(attack_success_no_sound)):
             pos_tag_prob = 0
+            tag_probs_now = self.trained_model.predict_proba(np.array((self.prev_action_index, i)))
             for j in range(0, len(attack_success_no_sound)):
-                
-                tag_probs_future = self.trained_model.predict_proba(np.array((i, j)))#np.array((self.prev_action_index, i)))
-                tag_probs_now = self.trained_model.predict_proba(np.array((self.prev_action_index, i)))
+                tag_probs_future = self.trained_model.predict_proba(np.array((i, j)))
                 tag_probs = (tag_probs_future + tag_probs_now)/2.
-                
                 if tag_probs.shape[1]==1L:
                     if self.action_y_train[0] == -1:
                         pos_tag_prob += 0

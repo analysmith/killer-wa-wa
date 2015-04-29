@@ -37,7 +37,7 @@ if __name__ == "__main__":
     if use_mammal:
         animal_class = Seal
     for i in range(0, nprey):
-        x, y = random.randint(0, d-1), random.randint(0, d-12) #np.unravel_index(random.sample(range(0, (d-10)*d), 1), (d-10,d))
-        e.add_animal(animal_class(e, None, y+11, x))
+        x, y = random.randint(0, d-10), random.randint(10, d-10) #np.unravel_index(random.sample(range(0, (d-10)*d), 1), (d-10,d))
+        e.add_animal(animal_class(e, None, y, x))
     print "Environment created..."
     generatePlot(e)
