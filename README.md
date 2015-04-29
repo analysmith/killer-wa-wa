@@ -13,6 +13,7 @@
      - scikit-learn
      - numpy
      - scipy
+* If you have trouble running the code, you may want to consider installing [Anaconda](https://store.continuum.io/cshop/anaconda/). It contains a number of Python libraries that are useful for scientific computing, and it's FREE.
 
 ### Contribution guidelines ###
 
